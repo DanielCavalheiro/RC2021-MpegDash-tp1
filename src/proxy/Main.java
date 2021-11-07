@@ -1,5 +1,6 @@
 package proxy;
 
+import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
 import http.HttpClient;
@@ -48,7 +49,9 @@ public class Main {
 			String manifestPath = String.format("%s/%s/manifest.txt", MEDIA_SERVER_BASE_URL, this.movie);
 			String manifestText= new String(http.doGet(manifestPath),StandardCharsets.UTF_8);
 			this.manifest = MovieManifest.parse(manifestText);
-
+			
+			SegmentContent sg = new SegmentContent(manifest.tracks().get(manifest.tracks().size()-1).contentType(), http.doGet(String.format("%s/%s/%s",MEDIA_SERVER_BASE_URL ,this.movie, manifest.tracks().get(manifest.tracks().size()-1).filename())));
+			queue.add(sg);
 		}
 		
 		/**
