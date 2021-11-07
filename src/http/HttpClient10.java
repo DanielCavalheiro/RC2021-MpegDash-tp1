@@ -46,13 +46,36 @@ public class HttpClient10 implements HttpClient {
 	}
 
 	public byte[] doGetRange(String urlStr, long start, long end) {
-		// TODO
-		return null;
+		try {
+			URL url = new URL(urlStr);
+			int port = url.getPort();
+			try (Socket cs = new Socket(url.getHost(), port < 0 ? url.getDefaultPort(): port)) {
+				String request = String.format(GET_FORMAT_STR, url.getFile(), USER_AGENT);
+				//System.out.println(request);
+				cs.getOutputStream().write(request.getBytes(),(int) start,(int) (end-start));
+				return getContents(cs.getInputStream());
+			}
+		} catch (Exception x) {
+			x.printStackTrace();
+			return null;
+		}
 	}
 
 	@Override
-	public byte[] doGetRange(String url, long start) {
-		// TODO
-		return null;
+	public byte[] doGetRange(String urlStr, long start) {
+		try {
+			URL url = new URL(urlStr);
+			int port = url.getPort();
+			try (Socket cs = new Socket(url.getHost(), port < 0 ? url.getDefaultPort(): port)) {
+				String request = String.format(GET_FORMAT_STR, url.getFile(), USER_AGENT);
+				//System.out.println(request);
+				byte bytes[]= request.getBytes();
+				cs.getOutputStream().write(bytes,(int) start,(int) (bytes.length-start));
+				return getContents(cs.getInputStream());
+			}
+		} catch (Exception x) {
+			x.printStackTrace();
+			return null;
+		}
 	}	
 }

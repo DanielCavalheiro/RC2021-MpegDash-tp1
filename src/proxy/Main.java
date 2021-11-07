@@ -9,8 +9,10 @@ import media.MovieManifest.Manifest;
 import media.MovieManifest.SegmentContent;
 import proxy.server.ProxyServer;
 
+import java.nio.charset.StandardCharsets;
+
 public class Main {
-	static final String MEDIA_SERVER_BASE_URL = "http://localhost:80";
+	static final String MEDIA_SERVER_BASE_URL = "http://localhost:9999";
 
 	public static void main(String[] args) throws Exception {
 
@@ -43,8 +45,10 @@ public class Main {
 			
 			this.http = new HttpClient10();
 			
-			
-			this.manifest = null; //TODO
+			String manifestPath = String.format("%s/%s/manifest.txt", MEDIA_SERVER_BASE_URL, this.movie);
+			String manifestText= new String(http.doGet(manifestPath),StandardCharsets.UTF_8);
+			this.manifest = MovieManifest.parse(manifestText);
+
 		}
 		
 		/**

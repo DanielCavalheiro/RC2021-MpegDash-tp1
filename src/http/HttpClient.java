@@ -10,10 +10,7 @@ public interface HttpClient {
 
 	static final int HTTP_DEFAULT_PORT = 80;
 
-	/**
-	 * TODO: replace aaaaa-bbbbb with student numbers
-	 */
-	static final String USER_AGENT = "User-Agent: X-aaaaa-bbbbb";
+	static final String USER_AGENT = "User-Agent: X-57869-58152";
 
 	/**
 	 * Gets the full contents of a resource
