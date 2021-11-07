@@ -27,6 +27,21 @@ public class HttpClient10 implements HttpClient {
 		}
 		return in.readAllBytes();
 	}
+
+	static private byte[] getContents(InputStream in,int offset,int len) throws IOException {
+
+		String reply = Http.readLine(in);
+		//System.out.println(reply);
+		if (!reply.contains(HTTP_SUCCESS)) {
+			throw new RuntimeException(String.format("HTTP request failed: [%s]", reply));
+		}
+		while ((reply = Http.readLine(in)).length() > 0) {
+			//System.out.println(reply);
+		}
+		byte[] contents = new byte[len];
+		in.read(contents, 0, len-offset);
+		return contents;
+	}
 	
 	@Override
 	public byte[] doGet(String urlStr) {
@@ -51,9 +66,9 @@ public class HttpClient10 implements HttpClient {
 			int port = url.getPort();
 			try (Socket cs = new Socket(url.getHost(), port < 0 ? url.getDefaultPort(): port)) {
 				String request = String.format(GET_FORMAT_STR, url.getFile(), USER_AGENT);
-				//System.out.println(request);
-				cs.getOutputStream().write(request.getBytes(),(int) start,(int) (end-start));
-				return getContents(cs.getInputStream());
+				System.out.println(request);
+				cs.getOutputStream().write(request.getBytes());
+				return getContents(cs.getInputStream(),(int)start,(int)(end));
 			}
 		} catch (Exception x) {
 			x.printStackTrace();

@@ -1,13 +1,14 @@
 package proxy;
 
-import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 
 import http.HttpClient;
 import http.HttpClient10;
 import media.MovieManifest;
 import media.MovieManifest.Manifest;
+import media.MovieManifest.Segment;
 import media.MovieManifest.SegmentContent;
+import media.MovieManifest.Track;
 import proxy.server.ProxyServer;
 
 import java.nio.charset.StandardCharsets;
@@ -49,9 +50,7 @@ public class Main {
 			String manifestPath = String.format("%s/%s/manifest.txt", MEDIA_SERVER_BASE_URL, this.movie);
 			String manifestText= new String(http.doGet(manifestPath),StandardCharsets.UTF_8);
 			this.manifest = MovieManifest.parse(manifestText);
-			
-			SegmentContent sg = new SegmentContent(manifest.tracks().get(manifest.tracks().size()-1).contentType(), http.doGet(String.format("%s/%s/%s",MEDIA_SERVER_BASE_URL ,this.movie, manifest.tracks().get(manifest.tracks().size()-1).filename())));
-			queue.add(sg);
+			run();
 		}
 		
 		/**
@@ -64,7 +63,15 @@ public class Main {
 		 * be fed with a zero-length data segment
 		 */
 		public void run() {
-			// TODO
+			for(int i = 0; i<manifest.tracks().get(0).segments().size();i++){
+				Track t0= manifest.tracks().get(i);
+				Segment s0 = t0.segments().get(i);
+				System.err.println(s0.offset());
+				System.err.println(s0.length());
+				SegmentContent sg = new SegmentContent(t0.contentType(), http.doGetRange(String.format("%s/%s/%s",MEDIA_SERVER_BASE_URL ,this.movie, t0.filename()),s0.offset(),s0.length()));
+				queue.add(sg);
+			}
+			
 		}
 	}
 }
