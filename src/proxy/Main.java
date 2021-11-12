@@ -50,7 +50,7 @@ public class Main {
 			String manifestPath = String.format("%s/%s/manifest.txt", MEDIA_SERVER_BASE_URL, this.movie);
 			String manifestText= new String(http.doGet(manifestPath),StandardCharsets.UTF_8);
 			this.manifest = MovieManifest.parse(manifestText);
-			run();
+
 		}
 		
 		/**
@@ -63,15 +63,55 @@ public class Main {
 		 * be fed with a zero-length data segment
 		 */
 		public void run() {
-			for(int i = 0; i<manifest.tracks().get(0).segments().size();i++){
-				Track t0= manifest.tracks().get(i);
-				Segment s0 = t0.segments().get(i);
-				System.err.println(s0.offset());
-				System.err.println(s0.length());
-				SegmentContent sg = new SegmentContent(t0.contentType(), http.doGetRange(String.format("%s/%s/%s",MEDIA_SERVER_BASE_URL ,this.movie, t0.filename()),s0.offset(),s0.length()));
-				queue.add(sg);
+			SegmentContent sg;
+			Track t=manifest.tracks().get(0);
+			Segment s;
+			long startTime;
+			double timeTaken;
+			double bandwidth=0;
+			for(int i = 0; i<t.segments().size();i++){
+				t= chooseTrack(bandwidth);
+				System.out.println(bandwidth+"\n"+t.avgBandwidth());
+				s = t.segments().get(i);
+				sg = new SegmentContent(t.contentType(), http.doGetRange(String.format("%s/%s/%s",MEDIA_SERVER_BASE_URL ,this.movie, t.filename()),s.offset(),s.offset()+s.length()-1));
+				bandwidth = getAvgBandwidth();
+				try {queue.put(sg);
+				}
+				catch (Exception x){
+					x.printStackTrace();
+				}
 			}
-			
+		}
+		private Track chooseTrack(double bandwidth){
+			Track tmp=null;
+			for(int j = manifest.tracks().size()-1;j>=0;j--){
+				tmp=manifest.tracks().get(j);
+				if(bandwidth>=tmp.avgBandwidth()){
+					Segment s = tmp.segments().get(0);
+					SegmentContent sg = new SegmentContent(tmp.contentType(), http.doGetRange(String.format("%s/%s/%s",MEDIA_SERVER_BASE_URL ,this.movie, tmp.filename()),s.offset(),s.offset()+s.length()-1));
+					try{ queue.put(sg);
+					return tmp;
+					}
+					catch (Exception x){
+						x.printStackTrace();
+					}
+				}
+			}
+			return tmp;
+		} 
+
+		private double getAvgBandwidth(){
+			Track tmp = manifest.tracks().get(0);
+			Segment s = tmp.segments().get(0);
+			int offset = s.offset();
+			int length = s.length();
+			long startT= System.nanoTime();
+			http.doGetRange(String.format("%s/%s/%s",MEDIA_SERVER_BASE_URL ,this.movie, tmp.filename()),offset,offset+length-1);
+			double timeT= (double)(System.nanoTime()-startT)/1000000000;
+			double bandwidth= s.length()/timeT;
+			System.out.println(bandwidth +" Bps");
+			return bandwidth;
+
 		}
 	}
 }
