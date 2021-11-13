@@ -70,7 +70,7 @@ public class Main {
 			double timeTaken;
 			double bandwidth=0;
 			for(int i = 0; i<t.segments().size();i++){
-				t= chooseTrack(bandwidth);
+				t= chooseTrack(bandwidth,t);
 				s = t.segments().get(i);
 				startTime= System.nanoTime();
 				sg = new SegmentContent(t.contentType(), http.doGetRange(String.format("%s/%s/%s",MEDIA_SERVER_BASE_URL ,this.movie, t.filename()),s.offset(),s.offset()+s.length()-1));
@@ -82,12 +82,24 @@ public class Main {
 					x.printStackTrace();
 				}
 			}
+			while(true){
+				byte[] b= new byte[0];
+				sg = new SegmentContent(t.contentType(), b);
+				try {queue.put(sg);
+				}
+				catch (Exception x){
+					x.printStackTrace();
+				}
+			}
 		}
-		private Track chooseTrack(double bandwidth){
+		private Track chooseTrack(double bandwidth, Track t){
 			Track tmp=null;
 			for(int j = manifest.tracks().size()-1;j>=0;j--){
 				tmp=manifest.tracks().get(j);
 				if(bandwidth>=tmp.avgBandwidth()+10000){
+					if(t.equals(tmp)){	
+						return tmp;
+					}
 					Segment s = tmp.segments().get(0);
 					SegmentContent sg = new SegmentContent(tmp.contentType(), http.doGetRange(String.format("%s/%s/%s",MEDIA_SERVER_BASE_URL ,this.movie, tmp.filename()),s.offset(),s.offset()+s.length()-1));
 					try{ queue.put(sg);

@@ -68,10 +68,9 @@ public class HttpClient10 implements HttpClient {
 			URL url = new URL(urlStr);
 			int port = url.getPort();
 			try (Socket cs = new Socket(url.getHost(), port < 0 ? url.getDefaultPort(): port)) {
-				String request = String.format(GET_FORMAT_STR, url.getFile(), USER_AGENT);
+				String request = String.format(GET_FORMAT_STR_RANGE, url.getFile(),start,-1, USER_AGENT);
 				//System.out.println(request);
-				byte bytes[]= request.getBytes();
-				cs.getOutputStream().write(bytes,(int) start,(int) (bytes.length-start));
+				cs.getOutputStream().write(request.getBytes());
 				return getContents(cs.getInputStream());
 			}
 		} catch (Exception x) {
